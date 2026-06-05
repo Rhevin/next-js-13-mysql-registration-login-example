@@ -1,8 +1,5 @@
-import getConfig from 'next/config';
-
 import { userService } from 'services';
 
-const { publicRuntimeConfig } = getConfig();
 
 export const fetchWrapper = {
     get: request('GET'),
@@ -31,7 +28,7 @@ function authHeader(url) {
     // return auth header with jwt if user is logged in and request is to the api url
     const user = userService.userValue;
     const isLoggedIn = user?.token;
-    const isApiUrl = url.startsWith(publicRuntimeConfig.apiUrl);
+    const isApiUrl = url.startsWith(process.env.NEXT_PUBLIC_API_URL);
     if (isLoggedIn && isApiUrl) {
         return { Authorization: `Bearer ${user.token}` };
     } else {
