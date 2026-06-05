@@ -1,9 +1,6 @@
-import getConfig from 'next/config';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { db } from 'helpers/api';
-
-const { serverRuntimeConfig } = getConfig();
 
 export const usersRepo = {
     authenticate,
@@ -22,7 +19,7 @@ async function authenticate({ username, password }) {
     }
 
     // create a jwt token that is valid for 7 days
-    const token = jwt.sign({ sub: user.id }, serverRuntimeConfig.secret, { expiresIn: '7d' });
+    const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     // remove hash from return value
     const userJson = user.get();

@@ -1,8 +1,5 @@
-import getConfig from 'next/config';
 import mysql from 'mysql2/promise';
 import { Sequelize, DataTypes } from 'sequelize';
-
-const { serverRuntimeConfig } = getConfig();
 
 export const db = {
     initialized: false,
@@ -12,7 +9,11 @@ export const db = {
 // initialize db and models, called on first api request from /helpers/api/api-handler.js
 async function initialize() {
     // create db if it doesn't already exist
-    const { host, port, user, password, database } = serverRuntimeConfig.dbConfig;
+    const host = process.env.DB_HOST;
+    const port = parseInt(process.env.DB_PORT, 10);
+    const user = process.env.DB_USER;
+    const password = process.env.DB_PASSWORD;
+    const database = process.env.DB_NAME;
     const connection = await mysql.createConnection({ host, port, user, password });
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
 
