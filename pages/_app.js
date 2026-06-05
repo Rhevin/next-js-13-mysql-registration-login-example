@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 import 'styles/globals.css';
@@ -14,7 +14,7 @@ function App({ Component, pageProps }) {
     const [user, setUser] = useState(null);
     const [authorized, setAuthorized] = useState(false);
 
-    const authCheck = useCallback((url) => {
+    function authCheck(url) {
         // redirect to login page if accessing a private page and not logged in
         setUser(userService.userValue);
         const publicPaths = ['/account/login', '/account/register'];
@@ -28,7 +28,7 @@ function App({ Component, pageProps }) {
         } else {
             setAuthorized(true);
         }
-    }, [router]);
+    }
 
     useEffect(() => {
         // on initial load - run auth check
@@ -45,8 +45,8 @@ function App({ Component, pageProps }) {
         return () => {
             router.events.off('routeChangeStart', hideContent);
             router.events.off('routeChangeComplete', authCheck);
-        }
-    }, [authCheck, router.asPath, router.events]);
+        };
+    }, []); // intentionally empty: auth listeners must only register once on mount
 
     return (
         <>
