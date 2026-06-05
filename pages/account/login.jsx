@@ -27,8 +27,9 @@ function Login() {
         alertService.clear();
         return userService.login(username, password)
             .then(() => {
-                // get return url from query parameters or default to '/'
-                const returnUrl = router.query.returnUrl || '/';
+                const raw = router.query.returnUrl || '/';
+                // only allow relative paths to prevent open redirect and XSS
+                const returnUrl = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
                 router.push(returnUrl);
             })
             .catch(alertService.error);
