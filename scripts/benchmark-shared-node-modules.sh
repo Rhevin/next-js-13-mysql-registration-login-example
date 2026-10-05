@@ -9,9 +9,13 @@
 #
 # Usage (from repo root):
 #   ./scripts/benchmark-shared-node-modules.sh preflight
+#   ./scripts/benchmark-shared-node-modules.sh pocketbase-preflight
 #   ./scripts/benchmark-shared-node-modules.sh run
 #   ./scripts/benchmark-shared-node-modules.sh report
 #   ./scripts/benchmark-shared-node-modules.sh cleanup
+#
+# PocketBase on 40016: set POCKETBASE_URL (and admin creds in .env.local on the host) for the
+# Next.js app; pocketbase-preflight checks pbctl on the server when manager is installed.
 set -euo pipefail
 
 HOST="${BENCHMARK_HOST:-lt-bnk-web40016.main-hosting.eu}"
@@ -78,6 +82,24 @@ rpm -q cl-bun lvemanager >/dev/null
 cl-node-modules-storage status
 df -h / /home 2>/dev/null | tail -n +2
 REMOTE
+}
+
+cmd_pocketbase_preflight() {
+  echo "host=${HOST} pocketbase_url=${POCKETBASE_URL:-<set POCKETBASE_URL locally for app .env.local>}"
+  ssh_root "bash -s" <<'REMOTE'
+set -euo pipefail
+if command -v pbctl >/dev/null; then
+  pbctl doctor
+  pbctl list
+  systemctl is-active pocketbase-manager || true
+else
+  echo "pbctl not found — pocketbase-manager not installed on this host yet"
+  exit 1
+fi
+REMOTE
+  if [[ -n "${POCKETBASE_URL:-}" ]]; then
+    curl -fsS -o /dev/null -w "pocketbase_http=%{http_code}\n" "${POCKETBASE_URL}/api/health" || true
+  fi
 }
 
 cmd_run() {
@@ -153,6 +175,7 @@ main() {
   local cmd="${1:-}"
   case "$cmd" in
     preflight) cmd_preflight ;;
+    pocketbase-preflight|pb-preflight) cmd_pocketbase_preflight ;;
     run) cmd_run ;;
     report) cmd_report ;;
     cleanup) cmd_cleanup ;;

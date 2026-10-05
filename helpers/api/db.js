@@ -1,54 +1,40 @@
-import mysql from 'mysql2/promise';
-import { Sequelize, DataTypes } from 'sequelize';
+import PocketBase from 'pocketbase';
 
 export const db = {
     initialized: false,
-    initialize
+    pb: null,
+    collection: 'app_users',
+    initialize,
 };
 
-// initialize db and models, called on first api request from /helpers/api/api-handler.js
+const COLLECTION_SCHEMA = {
+    name: 'app_users',
+    type: 'base',
+    fields: [
+        { name: 'username', type: 'text', required: true, unique: true, min: 1, max: 255 },
+        { name: 'hash', type: 'text', required: true, hidden: true, min: 1, max: 255 },
+        { name: 'firstName', type: 'text', required: true, min: 1, max: 255 },
+        { name: 'lastName', type: 'text', required: true, min: 1, max: 255 },
+    ],
+};
+
 async function initialize() {
-    // create db if it doesn't already exist
-    const host = process.env.DB_HOST;
-    const port = parseInt(process.env.DB_PORT, 10);
-    const user = process.env.DB_USER;
-    const password = process.env.DB_PASSWORD;
-    const database = process.env.DB_NAME;
-    const connection = await mysql.createConnection({ host, port, user, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+    const url = process.env.POCKETBASE_URL;
+    const email = process.env.POCKETBASE_ADMIN_EMAIL;
+    const password = process.env.POCKETBASE_ADMIN_PASSWORD;
 
-    // connect to db
-    const sequelize = new Sequelize(database, user, password, { dialect: 'mysql' });
+    if (!url || !email || !password) {
+        throw 'POCKETBASE_URL, POCKETBASE_ADMIN_EMAIL and POCKETBASE_ADMIN_PASSWORD are required';
+    }
 
-    // init models and add them to the exported db object
-    db.User = userModel(sequelize);
+    const pb = new PocketBase(url);
+    await pb.collection('_superusers').authWithPassword(email, password);
 
-    // sync all models with database
-    await sequelize.sync({ alter: true });
+    const existing = await pb.collections.getOne(db.collection).catch(() => null);
+    if (!existing) {
+        await pb.collections.create(COLLECTION_SCHEMA);
+    }
 
+    db.pb = pb;
     db.initialized = true;
-}
-
-// sequelize models with schema definitions
-
-function userModel(sequelize) {
-    const attributes = {
-        username: { type: DataTypes.STRING, allowNull: false },
-        hash: { type: DataTypes.STRING, allowNull: false },
-        firstName: { type: DataTypes.STRING, allowNull: false },
-        lastName: { type: DataTypes.STRING, allowNull: false }
-    };
-
-    const options = {
-        defaultScope: {
-            // exclude password hash by default
-            attributes: { exclude: ['hash'] }
-        },
-        scopes: {
-            // include hash with this scope
-            withHash: { attributes: {}, }
-        }
-    };
-
-    return sequelize.define('User', attributes, options);
 }
