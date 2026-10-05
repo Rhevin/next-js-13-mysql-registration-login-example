@@ -65,5 +65,5 @@ Dependabot auto-updates npm deps weekly.
 ## Rules
 - Server-only code lives in `helpers/api/` — never import it from pages or components
 - Use `process.env.*` for config — do NOT use `next/config`
-- Validate `returnUrl` before redirecting (must start with `/`, not `//`)
+- Post-login redirects use `helpers/safe-return-url.js` (`safeReturnPath`) for same-origin paths only
 - Run `npm audit` after dependency changes — 0 vulnerabilities required

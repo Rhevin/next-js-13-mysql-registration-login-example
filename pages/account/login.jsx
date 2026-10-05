@@ -5,6 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
 import { Layout } from 'components/account';
+import { safeReturnPath } from 'helpers/safe-return-url';
 import { userService, alertService } from 'services';
 
 export default Login;
@@ -27,10 +28,7 @@ function Login() {
         alertService.clear();
         return userService.login(username, password)
             .then(() => {
-                const raw = router.query.returnUrl || '/';
-                // only allow relative paths to prevent open redirect and XSS
-                const returnUrl = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
-                router.push(returnUrl);
+                router.push(safeReturnPath(router.query.returnUrl));
             })
             .catch(alertService.error);
     }
