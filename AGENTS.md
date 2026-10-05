@@ -1,9 +1,9 @@
 # AGENTS.md
 
 ## Stack
-- Next.js 15 (pages router)
-- MySQL + Sequelize ORM
-- JWT auth (jsonwebtoken + express-jwt)
+- Next.js (pages router)
+- PocketBase (`app_users` collection via admin API in `helpers/api/db.js`)
+- JWT auth (jsonwebtoken + express-jwt) for the Next.js UI session
 - React Hook Form + Yup validation
 - Bootstrap (CDN, loaded in `pages/_document.js`)
 
@@ -26,7 +26,7 @@ Copy `.env.example` to `.env.local` and fill in values. Never commit `.env.local
 
 | Variable | Used in |
 |---|---|
-| `DB_HOST/PORT/USER/PASSWORD/NAME` | `helpers/api/db.js` |
+| `POCKETBASE_URL`, `POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD` | `helpers/api/db.js` |
 | `JWT_SECRET` | `helpers/api/jwt-middleware.js`, `helpers/api/users-repo.js` |
 | `NEXT_PUBLIC_API_URL` | `helpers/fetch-wrapper.js`, `services/user.service.js` |
 
